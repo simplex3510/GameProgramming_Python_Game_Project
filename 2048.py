@@ -1,188 +1,182 @@
-import random
+# GUI 모듈을 포함시킴
+from tkinter import Frame, Label, CENTER
+
+import logic
 import contents as c
 
 TOTAL_SCORE = 0
 
-#####################
-# 게임 플로우 관련 함수 #
-#####################
+class GameGrid(Frame):
+    # 초기화 함수
+    def __init__(self):
+        # 프레임 생성
+        Frame.__init__(self)
 
-# 새 게임 시작, n=4로 전달받음
-def new_game(n):
-    # 매트릭스 생성
-    matrix = []
-    # 4번 반복 -> 4*4 매트릭스 설정
-    for i in range(n):
-        # 매트릭스 리스트에 [0],[0],[0],[0] 추가
-        matrix.append([0] * n)
-    # 매트릭스 리스트 반환
-    return matrix
+        self.grid()                                     # 그리드 설정
+        self.master.title('2048?')                      # 윈도우 창 이름 설정
+        self.master.bind("<Key>", self.key_down)        # 키 입력, 어떤 함수를 키에 종속(bind)
 
-# 게임 상태 판단
-def game_state(mat):
+        # self.gamelogic = gamelogic
+        # 입력 키 커맨드 정의
+        self.commands = {c.KEY_UP: logic.up,        c.KEY_UP_ALT: logic.up,         c.KEY_K: logic.up,
+                         c.KEY_DOWN: logic.down,    c.KEY_DOWN_ALT: logic.down,     c.KEY_J: logic.down,
+                         c.KEY_LEFT: logic.left,    c.KEY_LEFT_ALT: logic.left,     c.KEY_H: logic.left,
+                         c.KEY_RIGHT: logic.right,  c.KEY_RIGHT_ALT: logic.right,   c.KEY_L: logic.right}
 
-    for i in range(len(mat)):               # 4번 반복 - 열의 증가
-        for j in range(len(mat[0])):        # 해당 행의 개수만큼 반복
-            if mat[i][j] == 2:           # 2048 타일의 존재 검사
-                return 'win'
+        # 종합 점수
+        self.total_score = []
+        # 그리드 셀즈 리스트
+        self.grid_fields = []
+        # 스코어 그리드 초기화
+        self.init_grid_score()
+        # 그리드 초기화
+        self.init_grid()
+        # 매트릭스 초기화
+        self.init_matrix()
+        # 그리드 셀즈 업데이트
+        self.update_grid()
+        # 윈도우 창을 윈도우가 종료될 때까지 실행시킴
+        self.mainloop()
 
-    for i in range(len(mat)-1):             # 0, 1, 2열 검사
-        for j in range(len(mat[0])-1):      # 0, 1, 2행 검사
-            # 인접한 타일 2개의 값이 서로 같은 것이 있는가?
-            if mat[i][j] == mat[i+1][j] or mat[i][j] == mat[i][j+1]:
-                return 'not over'
+    # 스코어 그리드 초기화
+    def init_grid_score(self):
+        # 아웃사이드 배경 프레임 생성
+        # 프레임(셀프 윈도우, 배경 색상, 배경 너비, 배경 높이)
+        background_out = Frame(self, bg=c.BACKGROUND_COLOR_GAME, width=c.SIZE, height=c.SIZE)
+        background_out.grid()  # 배경 그리드 생성, 윈도우 창에 배치
 
-    # 가장 오른쪽 하단의 타일 검사
-    if mat[len(mat)-1][len(mat)-1] == mat[2][3]:
-        return 'not over'
-    elif mat[len(mat)-1][len(mat)-1] == mat[3][2]:
-        return 'not over'
+        # 인사이드 배경 설정 및 그리드
+        background_in = Frame(background_out, bg=c.BACKGROUND_COLOR_field_EMPTY, width= 676, height=200)
+        background_in.grid(row=0, column=0, padx=c.GRID_PADDING, pady=c.GRID_PADDING)
 
-    for i in range(len(mat)):               # 4번 반복 - 열의 증가
-        for j in range(len(mat[0])):        # 해당 행의 개수만큼 반복
-            if mat[i][j] == 0:              # 빈 타일의 존재 검사
-                return 'not over'
+        # 스코어 위젯 설정 및 그리드
+        score = Label(background_in, text="score: " + str(self.total_score),
+                      bg=c.BACKGROUND_COLOR_field_EMPTY, fg="#f9f6f2",
+                      justify=CENTER, font=c.FONT, width=18, height=2)
+        score.grid()
 
-    for k in range(len(mat)-1):             # 0, 1, 2행 검사
-        # 인접한 좌우 타일의 값이 동인한지 검사
-        if mat[len(mat)-1][k] == mat[len(mat)-1][k+1]:
-            return 'not over'
+        self.total_score.append(score)
 
-    for j in range(len(mat)-1):             # 0, 1, 2열 검사
-        # 인접한 상후 타일의 값이 동일한지 검사
-        if mat[j][len(mat)-1] == mat[j+1][len(mat)-1]:
-            return 'not over'
+    # 그리드 초기화
+    def init_grid(self):
+        # 배경 프레임 생성
+        # 배경 화면 = 프레임(셀프 윈도우, 배경 색상, 배경 너비, 배경 높이)
+        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME, width=c.SIZE, height=c.SIZE)
+        background.grid()   # 배경 그리드 생성, 윈도우 창에 배치
 
-    return 'lose'                           # 그 외의 경우에는 패배
+        # 각각의 셀에 프레임을 생성하고 그리드 설정
+        for i in range(c.GRID_LEN):
+            grid_row = []               # 4개의 가로 그리드 리스트 생성
+            for j in range(c.GRID_LEN):
 
-################
-# 타일 관련 함수 #
-################
+                # 셀 프레임(배경 윈도우, 셀 배경색, 셀 너비 = 100, 셀 높이 = 100)
+                field = Frame(background, bg=c.BACKGROUND_COLOR_field_EMPTY,
+                             width=c.SIZE / c.GRID_LEN,
+                             height=c.SIZE / c.GRID_LEN)
 
-# 새로운 타일 생성
-def create_tile(mat):
-    # 임의의 좌표를 각각의 변수에 저장
-    a = random.randint(0, len(mat)-1)
-    b = random.randint(0, len(mat)-1)
-    # 해당 좌표의 값이 0일 경우 (비어있을 경우)
-    while(mat[a][b] != 0):
-        a = random.randint(0, len(mat)-1)
-        b = random.randint(0, len(mat)-1)
-    # 해당 좌표의 값을 2로 설정(새로운 타일 생성)
-    mat[a][b] = 2048
-    return mat
+                # 셀 그리드(가로 위치, 세로 위치, 위젯에 대한 x방향 외부 패딩, 위젯에 대한 y방향 외부 패딩)
+                field.grid(row=i, column=j,
+                          padx=c.GRID_PADDING,
+                          pady=c.GRID_PADDING)
 
-# 타일 변경
-def change_tile(mat):
-    do = (random.randint(0, 9))
-    if do == 5:
-        index = (random.randint(0, 3), random.randint(0, 3))
+                # (가장 앞)master윈도우, 출력 문자열(비어있음), 타일 배경 색상, 화면 중앙 정렬, 폰트, 가로4, 세로2
+                tile = Label(master = field, text="",
+                          bg=c.BACKGROUND_COLOR_field_EMPTY,
+                          justify=CENTER, font=c.FONT, width=4, height=2)
 
-        while mat[index[0]][index[1]] == 0:
-            index = (random.randint(0, 3), random.randint(0, 3))
+                # 타일 그리드
+                tile.grid()
 
-        mat[index[0]][index[1]] = 2 ** random.randint(2, 11)
-    return mat
+                # 가로 그리드 리스트에 설정한 타일 추가 - 4번 반복
+                grid_row.append(tile)
 
-# 타일 소멸
-def disappear_tile(mat, x, y):
-    do = (random.randint(0, 6))
-    if do == 3:
-        mat[x][y] = 0
-    return mat
+            # 그리드 셀즈에 가로 그리드 추가 - 4번 반복
+            self.grid_fields.append(grid_row)
 
-#################
-# 게임 메인 시스템 #
-#################
+    # 매트릭스 초기화
+    def init_matrix(self):
+        # 매트릭스 리스트 생성, 4를 전달
+        self.matrix = logic.new_game(c.GRID_LEN)
+        # 히스토리 매트릭스 리스트 생성, 비어있음
+        self.history_matrixs = list()
+        # 기본 시작 시의 2타일 2개 생성
+        #self.matrix[0][3] = 2048
+        #self.matrix[2][3] = 2048
+        self.matrix = logic.create_tile(self.matrix)
+        self.matrix = logic.create_tile(self.matrix)
 
-# 90도 회전
-def degree_90(mat):
-    new = []                             # 새로운 리스트 생성
-    for i in range(4):         # 4번 반복 - 해당 가로열의 요소 개수
-        new.append([])                   # 4개의 리스트 추가 (2차원 리스트)
-        for j in range(3, -1, -1):        # 4번 반복
-            new[i].append(mat[j][i])     # 세로로 정렬
-    # 세로로 정렬된 리스트 반환
-    return new
+    # 화면에 출력될 그리드 셀즈 업데이트
+    def update_grid(self):
 
-# 왼쪽 정렬 함수
-def cover_up(mat):
-    new = []                                # new 리스트 생성 - 왼쪽으로 정렬된 값을 입력받음
-    for i in range(c.GRID_LEN):             # 4번 반복
-        partial_new = []                    # 부분적 new 리스트 생성
-        for j in range(c.GRID_LEN):         # 4번 반복
-            partial_new.append(0)           # 부분적 new 리스트에 0 추가
-        new.append(partial_new)             # new 리스트에 [0, 0, 0, 0] 추가 - partial_new
-    done = False                            # done을 False로 전환
+        # 매트릭스 전체 값을 검사
+        for i in range(c.GRID_LEN):
+            for j in range(c.GRID_LEN):
+                # 뉴 넘버에 해당 좌표의 값을 저장
+                new_number = self.matrix[i][j]
+                if new_number == 0:             # 뉴 넘버가 0이라면(타일이 없다면)
+                    # 그리드 셀즈에 있는 해당 좌표의 값을
+                    # (텍스트 출력 안 함, 빈 배경 색상)으로 변경
+                    self.grid_fields[i][j].configure(
+                        text="", bg=c.BACKGROUND_COLOR_field_EMPTY)
 
-    for i in range(c.GRID_LEN):             # 4번 반복
-        count = 0                           # 카운트 생성 - 왼쪽으로부터 몇 번째에 저장될지 명시
-        for j in range(c.GRID_LEN):         # 4번 반복
-            if mat[i][j] != 0:              # 해당 매트릭스 좌표의 값이 0이 아니면 - 빈 타일은 무시
-                new[i][count] = mat[i][j]   # mat 리스트의 값을 new 리스트에 왼쪽으로 정렬하여 저장
-                if j != count:              # j가 count와 같지 않다면
-                    done = True             # done을 True로 전환
-                count += 1                  # 다음 인덱스에 저장해야 하므로 1증가
+                else:                           # 타일이 있다면
+                    # 그리드 셀즈에 있는 해당 좌표의 값을
+                    # (뉴 넘버 문자열 출력, 뉴 넘버에 대응하는 배경 색상, 뉴 넘버에 대응하는 문자 색상)
+                    self.grid_fields[i][j].configure(text=str(new_number),
+                        bg=c.BACKGROUND_COLOR_DICT[new_number],
+                        fg=c.field_COLOR_DICT[new_number])
 
-    # new 리스트와 done의 상태를 반환
-    return (new, done)
+        self.total_score[0].configure(text= "score: " + str(TOTAL_SCORE))
 
-# 타일 합병 함수 및 점수 증가
-def merge(mat):
-    global TOTAL_SCORE
-    done = False                            # done을 False로 전환
-    for i in range(c.GRID_LEN):             # 4번 반복
-        for j in range(c.GRID_LEN-1):       # 0, 1, 2번째까지만 접근
-            # 해당 좌표와 인접한 오른쪽 값이 같음 + 둘 다 0이 아닐 경우
-            # 즉, 0이 아닌 타일 2개가 서로 같은가
-            if mat[i][j] == mat[i][j+1] and mat[i][j] != 0:
-                mat[i][j] = int(mat[i][j] / 2)              # 해당 좌표값 2배 - 다음 레벨 타일
-                mat[i][j+1] = 0             # 오른쪽 값은 소멸 - 피합병 타일 소멸
-                TOTAL_SCORE += mat[i][j]    # 생성된 값만큼 점수 증가
-                #mat = disappear_tile(mat, i, j)
-                done = True                 # done을 True로 전환
+        # 모두 검사 후, 화면 출력을 업데이트
+        self.update_idletasks()
 
-    # 변화된 매트릭스 리스트와 done 상태를 반환
-    return (mat, done, TOTAL_SCORE)
+    # 키보드 입력 판단
+    def key_down(self, event):
+        # 변수에 키보드 이벤트에서 발생하는 문자를 문자열 객체로 저장
+        key = repr(event.char)
+        print(repr(event.char))
 
-#####################
-# 입력된(키) 명령 실행 #
-#####################
+        # 입력된 키가 'b' + 히스토리 매트릭스의 길이가 2이상일 경우
+        if (key == c.KEY_BACK) and (len(self.history_matrixs) >= 1):
+            # 저장된 이전 매트릭스를 불러옴
+            self.matrix = self.history_matrixs.pop()
+            # 화면 출력 업데이트
+            self.update_grid()
+            # 되돌리기 문구 출력: 남은 히스토리 매트릭스 길이(되돌릴 수 있는 회수)
+            print('back on step total step:', len(self.history_matrixs))
 
-def up(game):
-    print("up")
-    game = degree_90(game); game = degree_90(game); game = degree_90(game)
-    game, done = cover_up(game)
-    temp = merge(game)                  # temp에 merge 이후의 game을 저장
-    done = done or temp[1]
-    game = cover_up(game)[0]
-    game = degree_90(game)
-    return (game, done, TOTAL_SCORE)
+        elif key in self.commands:
+            global TOTAL_SCORE
+            #                                      ex) logic.up(self.matrix)
+            self.matrix, done, TOTAL_SCORE = self.commands[repr(event.char)](self.matrix)
 
-def down(game):
-    print("down")
-    game = degree_90(game)     #
-    game, done = cover_up(game)
-    temp = merge(game)                  # temp에 merge 이후의 game을 저장
-    done = done or temp[1]
-    game = cover_up(game)[0]
-    game = degree_90(game); game = degree_90(game); game = degree_90(game)
-    return (game, done, TOTAL_SCORE)
+            # done이 참이라면
+            if done:
+                # 히스토리 매트릭스 리스트에 직전 움직임 기록
+                self.history_matrixs.append(self.matrix)
+                # 타일 변경
+                #self.matrix = logic.change_tile(self.matrix)
+                # 매트릭스에 새로운 타일 생성
+                self.matrix = logic.create_tile(self.matrix)
 
-def left(game):
-    print("left")
-    game, done = cover_up(game)
-    temp = merge(game)                  # temp에 merge 이후의 game을 저장
-    done = done or temp[1]
-    game = cover_up(game)[0]
-    return (game, done, TOTAL_SCORE)
+                # 화면 출력 업데이트
+                self.update_grid()
+                # done을 Flase로 전환
+                done = False
 
-def right(game):
-    print("right")
-    game = degree_90(game); game = degree_90(game)
-    game, done = cover_up(game)
-    temp = merge(game)                  # temp에 merge 이후의 game을 저장
-    done = done or temp[1]
-    game = cover_up(game)[0]
-    game = degree_90(game); game = degree_90(game)
-    return (game, done, TOTAL_SCORE)
+                #  게임에서 승리할 경우
+                if logic.game_state(self.matrix) == 'win':
+                    self.grid_fields[1][1].configure(
+                        text="You", bg=c.BACKGROUND_COLOR_field_EMPTY)
+                    self.grid_fields[1][2].configure(
+                        text="Win!", bg=c.BACKGROUND_COLOR_field_EMPTY)
+
+                # 게임에서 패배할 경우
+                if logic.game_state(self.matrix) == 'lose':
+                    self.grid_fields[1][1].configure(
+                        text="You", bg=c.BACKGROUND_COLOR_field_EMPTY)
+                    self.grid_fields[1][2].configure(
+                        text="Lose!", bg=c.BACKGROUND_COLOR_field_EMPTY)
+
+gamegrid = GameGrid()

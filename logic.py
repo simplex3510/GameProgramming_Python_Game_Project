@@ -1,5 +1,3 @@
-#  2020-GameProgramming---Python-Game-Project
-
 import random
 import contents as c
 
