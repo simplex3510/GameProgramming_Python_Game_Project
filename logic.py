@@ -69,7 +69,7 @@ def create_tile(mat):
         a = random.randint(0, len(mat)-1)
         b = random.randint(0, len(mat)-1)
     # 해당 좌표의 값을 2로 설정(새로운 타일 생성)
-    mat[a][b] = 4
+    mat[a][b] = 2048
     return mat
 
 # 타일 변경

@@ -100,10 +100,10 @@ class GameGrid(Frame):
         # 히스토리 매트릭스 리스트 생성, 비어있음
         self.history_matrixs = list()
         # 기본 시작 시의 2타일 2개 생성
-        self.matrix[0][3] = 4
-        self.matrix[2][3] = 4
-        #self.matrix = logic.create_tile(self.matrix)
-        #self.matrix = logic.create_tile(self.matrix)
+        '''self.matrix[0][3] = 4
+        self.matrix[2][3] = 4'''
+        self.matrix = logic.create_tile(self.matrix)
+        self.matrix = logic.create_tile(self.matrix)
 
     # 화면에 출력될 그리드 셀즈 업데이트
     def update_grid(self):
@@ -135,7 +135,7 @@ class GameGrid(Frame):
     def key_down(self, event):
         # 변수에 키보드 이벤트에서 발생하는 문자를 문자열 객체로 저장
         key = repr(event.char)
-        print(repr(event.char))
+        #print(repr(event.char))
 
         # 입력된 키가 'b' + 히스토리 매트릭스의 길이가 2이상일 경우
         if (key == c.KEY_BACK) and (len(self.history_matrixs) >= 1):
@@ -156,7 +156,7 @@ class GameGrid(Frame):
                 # 히스토리 매트릭스 리스트에 직전 움직임 기록
                 self.history_matrixs.append(self.matrix)
                 # 타일 변경
-                #self.matrix = logic.change_tile(self.matrix)
+                self.matrix = logic.change_tile(self.matrix)
                 # 매트릭스에 새로운 타일 생성
                 self.matrix = logic.create_tile(self.matrix)
 
