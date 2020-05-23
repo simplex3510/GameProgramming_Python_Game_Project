@@ -168,9 +168,9 @@ class GameGrid(Frame):
                 #  게임에서 승리할 경우
                 if logic.game_state(self.matrix) == 'win':
                     self.grid_fields[1][1].configure(
-                        text="You", bg=c.BACKGROUND_COLOR_field_EMPTY)
+                        text="You", bg=c.BACKGROUND_COLOR_field_EMPTY, fg=c.GAME_STATE_TEXT)
                     self.grid_fields[1][2].configure(
-                        text="Win!", bg=c.BACKGROUND_COLOR_field_EMPTY)
+                        text="Win!", bg=c.BACKGROUND_COLOR_field_EMPTY, fg=c.GAME_STATE_TEXT)
 
                 # 게임에서 패배할 경우
                 if logic.game_state(self.matrix) == 'lose':
