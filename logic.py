@@ -13,8 +13,8 @@ def new_game(n):
     matrix = []
     # 4번 반복 -> 4*4 매트릭스 설정
     for i in range(n):
-        # 매트릭스 리스트에 [0],[0],[0],[0] 추가
-        matrix.append([0] * n)
+        # 매트릭스 리스트에 [-1],[-1],[-1],[-1] 추가
+        matrix.append([-1] * n)
     # 매트릭스 리스트 반환
     return matrix
 
@@ -23,12 +23,12 @@ def game_state(mat):
 
     for i in range(len(mat)):               # 4번 반복 - 열의 증가
         for j in range(len(mat[0])):        # 해당 행의 개수만큼 반복
-            if mat[i][j] == 2:           # 2048 타일의 존재 검사
+            if mat[i][j] == 1:           # 1 타일의 존재 검사
                 return 'win'
 
     for i in range(len(mat)-1):             # 0, 1, 2열 검사
         for j in range(len(mat[0])-1):      # 0, 1, 2행 검사
-            # 인접한 타일 2개의 값이 서로 같은 것이 있는가?
+            # 인접한 타일(아래쪽, 오른쪽) 2개의 값이 서로 같은 것이 있는가?
             if mat[i][j] == mat[i+1][j] or mat[i][j] == mat[i][j+1]:
                 return 'not over'
 
@@ -40,7 +40,7 @@ def game_state(mat):
 
     for i in range(len(mat)):               # 4번 반복 - 열의 증가
         for j in range(len(mat[0])):        # 해당 행의 개수만큼 반복
-            if mat[i][j] == 0:              # 빈 타일의 존재 검사
+            if mat[i][j] == -1:              # 빈 타일의 존재 검사
                 return 'not over'
 
     for k in range(len(mat)-1):             # 0, 1, 2행 검사
@@ -49,7 +49,7 @@ def game_state(mat):
             return 'not over'
 
     for j in range(len(mat)-1):             # 0, 1, 2열 검사
-        # 인접한 상후 타일의 값이 동일한지 검사
+        # 인접한 상하 타일의 값이 동일한지 검사
         if mat[j][len(mat)-1] == mat[j+1][len(mat)-1]:
             return 'not over'
 
@@ -65,22 +65,25 @@ def create_tile(mat):
     a = random.randint(0, len(mat)-1)
     b = random.randint(0, len(mat)-1)
     # 해당 좌표의 값이 0일 경우 (비어있을 경우)
-    while(mat[a][b] != 0):
+    while(mat[a][b] != -1):
         a = random.randint(0, len(mat)-1)
         b = random.randint(0, len(mat)-1)
     # 해당 좌표의 값을 2로 설정(새로운 타일 생성)
-    mat[a][b] = 2048
+    mat[a][b] = 4
     return mat
 
 # 타일 변경
 def change_tile(mat):
+    # 0 ~ 9까지의 임의의 정수 받아옴
     do = (random.randint(0, 9))
+    # 1/10의 확률로 5가 걸리면
     if do == 5:
+        # 임의의 좌표값을 설정함
         index = (random.randint(0, 3), random.randint(0, 3))
-
+        # 비어있을 때까지 반복
         while mat[index[0]][index[1]] == 0:
             index = (random.randint(0, 3), random.randint(0, 3))
-
+        # 해당 타일의 값을 2의 2승(4) ~ 11승(2048) 중의 하나로 변경
         mat[index[0]][index[1]] = 2 ** random.randint(2, 11)
     return mat
 
@@ -88,7 +91,7 @@ def change_tile(mat):
 def disappear_tile(mat, x, y):
     do = (random.randint(0, 6))
     if do == 3:
-        mat[x][y] = 0
+        mat[x][y] = -1
     return mat
 
 #################
@@ -111,14 +114,14 @@ def cover_up(mat):
     for i in range(c.GRID_LEN):             # 4번 반복
         partial_new = []                    # 부분적 new 리스트 생성
         for j in range(c.GRID_LEN):         # 4번 반복
-            partial_new.append(0)           # 부분적 new 리스트에 0 추가
+            partial_new.append(-1)          # 부분적 new 리스트에 0 추가
         new.append(partial_new)             # new 리스트에 [0, 0, 0, 0] 추가 - partial_new
     done = False                            # done을 False로 전환
 
     for i in range(c.GRID_LEN):             # 4번 반복
         count = 0                           # 카운트 생성 - 왼쪽으로부터 몇 번째에 저장될지 명시
         for j in range(c.GRID_LEN):         # 4번 반복
-            if mat[i][j] != 0:              # 해당 매트릭스 좌표의 값이 0이 아니면 - 빈 타일은 무시
+            if mat[i][j] != -1:              # 해당 매트릭스 좌표의 값이 0이 아니면 - 빈 타일은 무시
                 new[i][count] = mat[i][j]   # mat 리스트의 값을 new 리스트에 왼쪽으로 정렬하여 저장
                 if j != count:              # j가 count와 같지 않다면
                     done = True             # done을 True로 전환
@@ -135,10 +138,10 @@ def merge(mat):
         for j in range(c.GRID_LEN-1):       # 0, 1, 2번째까지만 접근
             # 해당 좌표와 인접한 오른쪽 값이 같음 + 둘 다 0이 아닐 경우
             # 즉, 0이 아닌 타일 2개가 서로 같은가
-            if mat[i][j] == mat[i][j+1] and mat[i][j] != 0:
-                mat[i][j] = int(mat[i][j] / 2)              # 해당 좌표값 2배 - 다음 레벨 타일
-                mat[i][j+1] = 0             # 오른쪽 값은 소멸 - 피합병 타일 소멸
-                TOTAL_SCORE += mat[i][j]    # 생성된 값만큼 점수 증가
+            if mat[i][j] == mat[i][j+1] and mat[i][j] != -1:
+                mat[i][j] = int(mat[i][j] / 2)              # 해당 좌표값 1/2배 - 다음 레벨 타일
+                mat[i][j+1] = -1                            # 오른쪽 값은 소멸 - 피합병 타일 소멸
+                TOTAL_SCORE += mat[i][j]                    # 생성된 값만큼 점수 증가
                 #mat = disappear_tile(mat, i, j)
                 done = True                 # done을 True로 전환
 

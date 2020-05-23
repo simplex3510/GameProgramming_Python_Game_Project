@@ -51,7 +51,7 @@ class GameGrid(Frame):
 
         # 스코어 위젯 설정 및 그리드
         score = Label(background_in, text="score: " + str(self.total_score),
-                      bg=c.BACKGROUND_COLOR_field_EMPTY, fg="#f9f6f2",
+                      bg=c.BACKGROUND_COLOR_field_EMPTY, fg=c.GAME_STATE_TEXT,
                       justify=CENTER, font=c.FONT, width=18, height=2)
         score.grid()
 
@@ -100,10 +100,10 @@ class GameGrid(Frame):
         # 히스토리 매트릭스 리스트 생성, 비어있음
         self.history_matrixs = list()
         # 기본 시작 시의 2타일 2개 생성
-        #self.matrix[0][3] = 2048
-        #self.matrix[2][3] = 2048
-        self.matrix = logic.create_tile(self.matrix)
-        self.matrix = logic.create_tile(self.matrix)
+        self.matrix[0][3] = 4
+        self.matrix[2][3] = 4
+        #self.matrix = logic.create_tile(self.matrix)
+        #self.matrix = logic.create_tile(self.matrix)
 
     # 화면에 출력될 그리드 셀즈 업데이트
     def update_grid(self):
@@ -113,7 +113,7 @@ class GameGrid(Frame):
             for j in range(c.GRID_LEN):
                 # 뉴 넘버에 해당 좌표의 값을 저장
                 new_number = self.matrix[i][j]
-                if new_number == 0:             # 뉴 넘버가 0이라면(타일이 없다면)
+                if new_number == -1 or new_number == 1:             # 뉴 넘버가 -1 또는 1이라면(타일이 없다면)
                     # 그리드 셀즈에 있는 해당 좌표의 값을
                     # (텍스트 출력 안 함, 빈 배경 색상)으로 변경
                     self.grid_fields[i][j].configure(
