@@ -26,19 +26,11 @@ GAME_STATE_TEXT = "#f9f6f2"
 
 FONT = ("Verdana", 40, "bold")
 
-KEY_UP_ALT = "\'\\uf700\'"
-KEY_DOWN_ALT = "\'\\uf701\'"
-KEY_LEFT_ALT = "\'\\uf702\'"
-KEY_RIGHT_ALT = "\'\\uf703\'"
 
-KEY_UP = "'w'"
-KEY_DOWN = "'s'"
-KEY_LEFT = "'a'"
-KEY_RIGHT = "'d'"
+
+KEY_UP = "38"
+KEY_DOWN = "40"
+KEY_LEFT = "37"
+KEY_RIGHT = "39"
 
 KEY_BACK = "'b'"
-
-KEY_J = "'j'"
-KEY_K = "'k'"
-KEY_L = "'l'"
-KEY_H = "'h'"

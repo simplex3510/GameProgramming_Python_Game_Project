@@ -18,10 +18,8 @@ class GameGrid(Frame):
 
         # self.gamelogic = gamelogic
         # 입력 키 커맨드 정의
-        self.commands = {c.KEY_UP: logic.up,        c.KEY_UP_ALT: logic.up,         c.KEY_K: logic.up,
-                         c.KEY_DOWN: logic.down,    c.KEY_DOWN_ALT: logic.down,     c.KEY_J: logic.down,
-                         c.KEY_LEFT: logic.left,    c.KEY_LEFT_ALT: logic.left,     c.KEY_H: logic.left,
-                         c.KEY_RIGHT: logic.right,  c.KEY_RIGHT_ALT: logic.right,   c.KEY_L: logic.right}
+        self.commands = {c.KEY_UP: logic.up, c.KEY_DOWN: logic.down,
+                         c.KEY_LEFT: logic.left, c.KEY_RIGHT: logic.right}
 
         # 종합 점수
         self.total_score = []
@@ -134,8 +132,7 @@ class GameGrid(Frame):
     # 키보드 입력 판단
     def key_down(self, event):
         # 변수에 키보드 이벤트에서 발생하는 문자를 문자열 객체로 저장
-        key = repr(event.char)
-        #print(repr(event.char))
+        key = repr(event.keycode)
 
         # 입력된 키가 'b' + 히스토리 매트릭스의 길이가 2이상일 경우
         if (key == c.KEY_BACK) and (len(self.history_matrixs) >= 1):
@@ -149,7 +146,7 @@ class GameGrid(Frame):
         elif key in self.commands:
             global TOTAL_SCORE
             #                                      ex) logic.up(self.matrix)
-            self.matrix, done, TOTAL_SCORE = self.commands[repr(event.char)](self.matrix)
+            self.matrix, done, TOTAL_SCORE = self.commands[repr(event.keycode)](self.matrix)
 
             # done이 참이라면
             if done:
